@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>1.0.0</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>http://www.example.com</licenseUrl>
+    <projectUrl>http://www.example.com</projectUrl>
+    <iconUrl>http://www.example.com</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <dependencies>
+      <dependency id="CSLA-Core" version="4.5.501" />
+    </dependencies>
+    <releaseNotes>
+      Initial Private Release.
+      
+      Remember:
+      To levearage type resolution from IoC, please make sure that the following registrations take place for each Type that needs to be created by
+      Csla.Abstractions.ObjectActivator (this assumes you are using Autofac as the IoC implementation):
+      o  register type for each Interface-ConcreteType combination you want to resolve
+      Example: myBuilder.RegisterType&lt;MyConcreteType&gt;().As&lt;IMyInterface&gt;();
+          o  register a IObjectPortal of IType for the targerted Csla type
+              Example: myBuilder.RegisterType&lt;ObjectPortal&lt;IMyInterface&gt;&gt;().As&lt;IObjectPortal&lt;IMyInterface&gt;&gt;();
+    </releaseNotes>
+    <copyright></copyright>
+    <tags>CSLA Abstractions</tags>
+  </metadata>
+</package>
