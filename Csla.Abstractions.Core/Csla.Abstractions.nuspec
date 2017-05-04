@@ -1,18 +1,17 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>$id$</id>
+    <id>CSLA-Abstractions</id>
     <version>1.0.0</version>
-    <title>$title$</title>
-    <authors>$author$</authors>
-    <owners>$author$</owners>
+    <title>Abstractions with CSLA</title>
+    <authors>AEV</authors>
+    <owners>AEV</owners>
     <licenseUrl>https://github.com/anibalvelarde/csla.abstractions/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/anibalvelarde/csla.abstractions</projectUrl>
     <iconUrl>http://www.iconsdb.com/icons/preview/black/theatre-masks-xxl.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <dependencies>
-      <dependency id="CSLA-Core" version="4.5.501" />
     </dependencies>
     <releaseNotes>
       Initial Public Release.
@@ -25,7 +24,7 @@
           o  register a IObjectPortal of IType for the targerted Csla type
               Example: myBuilder.RegisterType&lt;ObjectPortal&lt;IMyInterface&gt;&gt;().As&lt;IObjectPortal&lt;IMyInterface&gt;&gt;();
     </releaseNotes>
-    <copyright></copyright>
+    <copyright>2017</copyright>
     <tags>CSLA Abstractions</tags>
   </metadata>
 </package>
