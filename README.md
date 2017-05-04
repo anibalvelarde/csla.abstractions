@@ -1,6 +1,6 @@
 # csla.abstractions
 
-The basis for this work is Rocky Lohtka's CSLA Framework. 
+The basis for this work is Rocky Lhotka's CSLA Framework. 
 
 # What is CSLA?
   
