@@ -1,16 +1,16 @@
-﻿using System;
-using Autofac;
-using Csla.Abstractions.Tests.Contracts;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Csla.Abstractions.Utils;
-using Csla.Abstractions.Core.Contracts;
+﻿using Autofac;
 using Csla.Abstractions.Attributes;
-using Csla.Abstractions.Core;
-using Csla.Serialization.Mobile;
-using System.Reflection;
+using Csla.Abstractions.Core.Contracts;
+using Csla.Abstractions.Core.Tests.Contracts;
 using Csla.Abstractions.Tests.Helper;
+using Csla.Abstractions.Utils;
+using Csla.Serialization.Mobile;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Spackle.Extensions;
+using System;
+using System.Reflection;
 
-namespace Csla.Abstractions.Tests
+namespace Csla.Abstractions.Core.Tests
 {
     [TestClass]
     public sealed class ObjectActivatorTests
@@ -139,7 +139,6 @@ namespace Csla.Abstractions.Tests
                     .As<IObjectPortal<IDependentActivatorTest>>();
                 // ... append new registrations to the container given by the TestActivator Action...
                 newBuilder.Update(container);
-              
                 // ... still arranging...
                 var activator = new ObjectActivator(container);
                 var obj = activator.CreateInstance(typeof(IDependentActivatorTest));
@@ -152,6 +151,38 @@ namespace Csla.Abstractions.Tests
                 var aDependency = target.GetType().GetProperty("ADependency", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(target, null);
                 Assert.IsInstanceOfType(aDependency, typeof(IObjectPortal<IActivatorTest>));
             });
+        }
+
+        [TestMethod]
+        public void InitializeInstanceWithClientSideDependencyDefined()
+        {
+            // Arrange...
+            // ... register more items into the container...
+            var aTestString = "Some-Test-String";
+            var containerBuilder = new ContainerBuilder();
+            containerBuilder.RegisterType<ActivatorTest>()
+                      .As<IActivatorTest>();
+            containerBuilder.RegisterType<ObjectPortal<IActivatorTest>>()
+                      .As<IObjectPortal<IActivatorTest>>();
+            containerBuilder.RegisterType<ActivatorWithDependencyTest>()
+                      .As<IDependentActivatorTest>();
+            containerBuilder.RegisterType<ObjectPortal<IDependentActivatorTest>>()
+                      .As<IObjectPortal<IDependentActivatorTest>>();
+
+            // ... append new registrations to the container given by the TestActivator Action...
+            using (new ObjectActivator(containerBuilder.Build()).Bind(() => ApplicationContext.DataPortalActivator))
+            {
+                // Act...
+                var obj = DataPortal.Fetch<IDependentActivatorTest>("some-data");
+
+                // Assert...
+                ActivatorWithDependencyTest target = (ActivatorWithDependencyTest)obj;
+                var firstDep = target.GetType().GetProperty("ADependency", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(target, null);
+                Assert.IsNull(firstDep);
+                var secondDep = target.GetType().GetProperty("BDependency", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).GetValue(target, null);
+                Assert.IsInstanceOfType(secondDep, typeof(IObjectPortal<IActivatorTest>));
+                Assert.AreEqual(aTestString, target.AccessClientSideDependency(aTestString));
+            }
         }
 
         [TestMethod]
@@ -246,11 +277,11 @@ namespace Csla.Abstractions.Tests
         public void CreateInstanceOfInterfaceImplementedByAChildType()
         {
             ObjectActivatorTests.TestActivator<IChildType, ChildType>(container =>
-             {
-                 var activator = new ObjectActivator(container);
-                 var obj = activator.CreateInstance(typeof(IObjectPortal<IChildType>));
-                 Assert.IsInstanceOfType(obj, typeof(IObjectPortal<IChildType>));
-             });
+            {
+                var activator = new ObjectActivator(container);
+                var obj = activator.CreateInstance(typeof(IObjectPortal<IChildType>));
+                Assert.IsInstanceOfType(obj, typeof(IObjectPortal<IChildType>));
+            });
         }
 
         [TestMethod]
@@ -279,7 +310,7 @@ namespace Csla.Abstractions.Tests
     }
 
     [Serializable]
-    internal sealed class ActivatorTest
+    internal class ActivatorTest
         : BusinessBaseCore<ActivatorTest>, IActivatorTest, ImplementedMultipleByTypeInDifferentAssembly
     {
         private void Child_Create(string data)
@@ -302,7 +333,8 @@ namespace Csla.Abstractions.Tests
         {
             this.Data = data;
         }
-        public readonly static PropertyInfo<string> DataProperty =
+
+        public static readonly PropertyInfo<string> DataProperty =
             PropertyInfoRegistration.Register<ActivatorTest, string>(_ => _.Data);
         public string Data
         {
@@ -354,39 +386,63 @@ namespace Csla.Abstractions.Tests
     internal sealed class ActivatorWithDependencyTest
         : BusinessBaseScopeCore<ActivatorWithDependencyTest>, IReadOnlyBaseCore, IDependentActivatorTest, ImplementedMultipleByTypeInDifferentAssembly
     {
+        [NonSerialized]
         private IObjectPortal<IActivatorTest> _dependency;
+        [NonSerialized]
+        private IObjectPortal<IActivatorTest> _anotherDependency;
+
+        [RunLocal]
         private void Child_Create(string data)
         {
             this.Data = data;
         }
         private void Child_Fetch(string data)
         {
-            this.Data = data;
+            var dep = this.ADependency.Fetch(data);
+            this.Data = dep.Data;
         }
         private void DataPortal_Create(string data)
         {
-            this.Data = data;
+            var dep = this.ADependency.Fetch(data);
+            this.Data = dep.Data;
         }
         private void DataPortal_Delete(string data)
         {
-            this.Data = data;
+            var dep = this.ADependency.Fetch(data);
+            this.Data = dep.Data;
         }
         private void DataPortal_Fetch(string data)
         {
-            this.Data = data;
+            var dep = this.ADependency.Fetch(data);
+            this.Data = dep.Data;
         }
-        public readonly static PropertyInfo<string> DataProperty =
+
+        public static readonly PropertyInfo<string> DataProperty =
             PropertyInfoRegistration.Register<ActivatorWithDependencyTest, string>(_ => _.Data);
         public string Data
         {
             get { return this.GetProperty(ActivatorWithDependencyTest.DataProperty); }
             set { this.SetProperty(ActivatorWithDependencyTest.DataProperty, value); }
         }
+
+        public string AccessClientSideDependency(string someData)
+        {
+            var dep = this.BDependency.Fetch(someData);
+            return dep.Data;
+        }
+
         [Dependency]
         internal IObjectPortal<IActivatorTest> ADependency
         {
             private get { return _dependency; }
             set { _dependency = value; }
+        }
+
+        [Dependency(ResolutionScope.ClientAndServer)]
+        internal IObjectPortal<IActivatorTest> BDependency
+        {
+            private get { return _anotherDependency; }
+            set { _anotherDependency = value; }
         }
 
         public string aString
@@ -432,7 +488,7 @@ namespace Csla.Abstractions.Tests
         }
 
         public override bool Execute()
-        {   
+        {
             BeforeServer();
             var cmd = DataPortal.Execute<CommandExample>(this);
             AfterServer(cmd);
@@ -521,3 +577,4 @@ namespace Csla.Abstractions.Tests
         }
     }
 }
+

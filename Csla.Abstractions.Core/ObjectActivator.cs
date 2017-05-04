@@ -78,7 +78,7 @@ namespace Csla.Abstractions
             }
         }
 
-        public void FinalizeInstance(object obj)        
+        public void FinalizeInstance(object obj)
         {
             if (obj == null)
             {
@@ -94,7 +94,7 @@ namespace Csla.Abstractions
                 foreach (var property in
                     (from _ in scopedObject.GetType().GetProperties(
                             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                     where _.GetCustomAttribute<DependencyAttribute>() != null
+                     where (_.GetCustomAttribute<DependencyAttribute>() != null && _.GetCustomAttribute<DependencyAttribute>().DependencyScope != ResolutionScope.ClientAndServer)
                      select _))
                 {
                     property.SetValue(scopedObject, null);
