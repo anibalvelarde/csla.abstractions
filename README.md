@@ -1,4 +1,13 @@
 # csla.abstractions
+
+The basis for this work is Rocky Lohtka's CSLA Framework. 
+
+# What is CSLA?
+  
+CSLA .NET is a software development framework that helps you build a reusable, maintainable object-oriented business layer for your app. This framework reduces the cost of building and maintaining applications. You can find additional information about this framework here: https://github.com/MarimerLLC/csla
+
+# Supporting Interfaces with CSLA
+
 This is an expansion of the work that Jason Bock (from Magenic) exposed in an article posted on Magenic.com (see citation below).
 
 Citation:
